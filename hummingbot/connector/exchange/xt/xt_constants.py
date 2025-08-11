@@ -3,7 +3,7 @@ from hummingbot.core.data_type.in_flight_order import OrderState
 
 DEFAULT_DOMAIN = "com"
 
-HBOT_ORDER_ID_PREFIX = "xt-"
+HBOT_ORDER_ID_PREFIX = "xt_"
 MAX_ORDER_ID_LEN = 32
 
 # Base URL
