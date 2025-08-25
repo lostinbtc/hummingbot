@@ -352,6 +352,9 @@ class XtExchange(ExchangePyBase):
             try:
                 event_type = event_message.get("event")
                 if event_type == "order":
+
+                    self.logger().info(f"event_message: {str(event_message)}")
+                    
                     order_update = event_message.get("data")
                     client_order_id = order_update.get("ci")
 
@@ -366,7 +369,7 @@ class XtExchange(ExchangePyBase):
 
                         order_update = OrderUpdate(
                             trading_pair=tracked_order.trading_pair,
-                            update_timestamp=order_update["t"] * 1e-3,
+                            update_timestamp=order_update["ct"] * 1e-3,
                             new_state=CONSTANTS.ORDER_STATE[order_update["st"]],
                             client_order_id=tracked_order.client_order_id,
                             exchange_order_id=str(order_update["i"]),
