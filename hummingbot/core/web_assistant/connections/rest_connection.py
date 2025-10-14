@@ -7,12 +7,26 @@ class RESTConnection:
         self._client_session = aiohttp_client_session
 
     async def call(self, request: RESTRequest) -> RESTResponse:
+        """
+        Execute the REST request via aiohttp with defensive URL handling
+        to ensure it is always a valid string and disable zstd compression.
+        """
+        url = request.url
+        if isinstance(url, (tuple, list)):
+            url = url[0]
+        if not isinstance(url, str):
+            url = str(url)
+
+        method_val = getattr(request.method, "value", request.method)
+
+        headers = {**(request.headers or {}), "Accept-Encoding": "identity"}
+
         aiohttp_resp = await self._client_session.request(
-            method=request.method.value,
-            url=request.url,
+            method=method_val,
+            url=url,
             params=request.params,
             data=request.data,
-            headers=request.headers,
+            headers=headers,
         )
 
         resp = await self._build_resp(aiohttp_resp)
@@ -20,5 +34,8 @@ class RESTConnection:
 
     @staticmethod
     async def _build_resp(aiohttp_resp: aiohttp.ClientResponse) -> RESTResponse:
+        """
+        Wraps aiohttp.ClientResponse into RESTResponse.
+        """
         resp = RESTResponse(aiohttp_resp)
         return resp
