@@ -9,6 +9,7 @@ class RESTConnection:
         """
         Execute the REST request via aiohttp with safe URL handling.
         Only disables compression decoding for Biconomy endpoints.
+        Compatible with both Enum and string HTTP methods.
         """
         url = request.url
         if isinstance(url, (tuple, list)):
@@ -16,11 +17,12 @@ class RESTConnection:
         if not isinstance(url, str):
             url = str(url)
 
-        # Detect if this is a Biconomy request
         disable_compression = "biconomy" in url.lower() or "bico" in url.lower()
 
+        method = request.method.value if hasattr(request.method, "value") else request.method
+
         aiohttp_resp = await self._client_session.request(
-            method=request.method.value,
+            method=method,
             url=url,
             params=request.params,
             data=request.data,
