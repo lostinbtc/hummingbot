@@ -8,8 +8,8 @@ class RESTConnection:
 
     async def call(self, request: RESTRequest) -> RESTResponse:
         """
-        Execute the REST request via aiohttp with defensive URL handling
-        to ensure it is always a valid string and disable zstd compression.
+        Execute the REST request via aiohttp with safe URL handling.
+        Disables zstd compression decoding for exchanges like Biconomy.
         """
         url = request.url
         if isinstance(url, (tuple, list)):
@@ -17,25 +17,17 @@ class RESTConnection:
         if not isinstance(url, str):
             url = str(url)
 
-        method_val = getattr(request.method, "value", request.method)
-
-        headers = {**(request.headers or {}), "Accept-Encoding": "identity"}
-
         aiohttp_resp = await self._client_session.request(
-            method=method_val,
+            method=request.method.value,
             url=url,
             params=request.params,
             data=request.data,
-            headers=headers,
+            headers=request.headers,
+            compress=None,                 
+            allow_redirects=True,
+            timeout=aiohttp.ClientTimeout(total=30),
+            auto_decompress=False,        
         )
 
-        resp = await self._build_resp(aiohttp_resp)
-        return resp
-
-    @staticmethod
-    async def _build_resp(aiohttp_resp: aiohttp.ClientResponse) -> RESTResponse:
-        """
-        Wraps aiohttp.ClientResponse into RESTResponse.
-        """
         resp = RESTResponse(aiohttp_resp)
         return resp
