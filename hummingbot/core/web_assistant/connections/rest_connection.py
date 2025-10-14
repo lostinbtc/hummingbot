@@ -11,23 +11,32 @@ class RESTConnection:
         Execute the REST request via aiohttp with safe URL handling.
         Disables zstd compression decoding for exchanges like Biconomy.
         """
+
+        # --- Normalize URL safely ---
         url = request.url
         if isinstance(url, (tuple, list)):
             url = url[0]
         if not isinstance(url, str):
             url = str(url)
 
+        # --- Normalize method safely (accepts enum or string) ---
+        method_value = (
+            request.method.value
+            if hasattr(request.method, "value")
+            else str(request.method)
+        )
+
+        # --- Perform HTTP request ---
         aiohttp_resp = await self._client_session.request(
-            method=request.method.value,
+            method=method_value,
             url=url,
             params=request.params,
             data=request.data,
             headers=request.headers,
-            compress=None,                 
+            compress=None,                  # prevent aiohttp auto-compression
             allow_redirects=True,
             timeout=aiohttp.ClientTimeout(total=30),
-            auto_decompress=False,        
+            auto_decompress=False,          # disable zstd/deflate decoding
         )
 
-        resp = RESTResponse(aiohttp_resp)
-        return resp
+        return RESTResponse(aiohttp_resp)
